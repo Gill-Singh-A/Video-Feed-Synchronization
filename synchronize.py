@@ -15,6 +15,9 @@ status_color = {
     ' ': Fore.WHITE
 }
 
+default_video_set_type = "Intersection"
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+
 def display(status, data, start='', end='\n'):
     print(f"{start}{status_color[status]}[{status}] {Fore.BLUE}[{date.today()} {strftime('%H:%M:%S', localtime())}] {status_color[status]}{Style.BRIGHT}{data}{Fore.RESET}{Style.RESET_ALL}", end=end)
 
@@ -31,26 +34,43 @@ def makeFolder(folder_name):
 
 if __name__ == "__main__":
     arguments = get_arguments(('-f', "--feed", "feed", "Name of Feed Folders with time mappings (seperated by ',')"),
-                              ('-w', "--write", "write", "Folder Name to store the Final Video Files"))
+                              ('-w', "--write", "write", "Folder Name to store the Final Video Files"),
+                              ('-t', "--type", "type", f"Type of Video Set (Union/Intersection, Default={default_video_set_type})"))
     if not arguments.feed:
         display('-', f"Please provide Name of Feed Folders with time mappings")
         exit(0)
     else:
         arguments.feed = arguments.feed.split(',')
+    if not arguments.write:
+        arguments.write = f"{date.today()} {strftime('%H_%M_%S', localtime())}"
+    if not arguments.type:
+        arguments.type = default_video_set_type
+    elif arguments.type == "Union":
+        arguments.type = "Union"
+    makeFolder(arguments.write)
     time_mappings = {}
     display(':', f"Loading Time Mappings")
     T1 = time()
     not_found = []
     for video_feed_folder in arguments.feed:
-        display('*', f"\t{video_feed_folder}", end='')
-        t1 = time()
-        with open(f"{video_feed_folder}/time_mapping", 'rb') as file:
-            time_mappings[video_feed_folder] = pickle.load(file)
-        t2 = time()
-        if t2 == t1:
-            print(f" => {Back.MAGENTA}{t2-t1} seconds{Back.RESET}")
-        else:
-            print()
+        try:
+            display('*', f"\t{video_feed_folder}", end='')
+            t1 = time()
+            with open(f"{video_feed_folder}/time_mapping", 'rb') as file:
+                time_mappings[video_feed_folder] = pickle.load(file)
+            t2 = time()
+            if t2 == t1:
+                print(f" => {Back.MAGENTA}{t2-t1} seconds{Back.RESET}")
+            else:
+                print()
+        except FileNotFoundError:
+            display('-', f"\t{Back.MAGENTA}{video_feed_folder}{Back.RESET} not found", start='\n')
+            not_found.append(video_feed_folder)
+        except:
+            display('-', f"\tError while Reading File {Back.MAGENTA}{video_feed_folder}{Back.RESET}", start='\n')
+            not_found.append(video_feed_folder)
+    for video in not_found:
+        arguments.feed.remove(video)
     T2 = time()
     display('+', f"Loaded Time Mappings")
     display(':', f"\tTime Taken     = {Back.MAGENTA}{T2-T1} seconds{Back.RESET}")
@@ -67,3 +87,5 @@ if __name__ == "__main__":
     video_wise_fps = {video_feed: 1/video_min_delay for video_feed, video_min_delay in video_wise_min_delay.items()}
     min_delay = min(list(video_wise_min_delay.values()))
     fps = 1/min_delay
+    resolutions = {video_feed: cv2.imread(f"{video_feed}/1.jpg").shape[:2] for video_feed in time_mappings.keys()}
+    video_writers = {video_feed: cv2.VideoWriter(f"{arguments.write}/{video_feed}.avi", fourcc, fps, resolutions[video_feed]) for video_feed in time_mappings.keys()}
