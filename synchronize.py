@@ -49,9 +49,21 @@ if __name__ == "__main__":
         t2 = time()
         if t2 == t1:
             print(f" => {Back.MAGENTA}{t2-t1} seconds{Back.RESET}")
+        else:
+            print()
     T2 = time()
     display('+', f"Loaded Time Mappings")
     display(':', f"\tTime Taken     = {Back.MAGENTA}{T2-T1} seconds{Back.RESET}")
     display(':', f"\tTimings Loaded = {Back.MAGENTA}{len(arguments.feed)}{Back.RESET}")
     if T2 != T1:
         display(':', f"\tRate           = {Back.MAGENTA}{len(arguments.feed)/(T2-T1):.2f} timings/second{Back.RESET}")
+    start_timings = [list(time_map.keys())[0] for time_map in time_mappings.values()]
+    end_timings = [list(time_map.keys())[-1] for time_map in time_mappings.values()]
+    min_start_time = min(start_timings)
+    max_start_time = max(start_timings)
+    min_end_time = min(end_timings)
+    max_end_time = max(end_timings)
+    video_wise_min_delay = {video_feed: min([list(time_map.keys())[index+1]-list(time_map.keys())[index] for index in range(0, len(time_map)-1)]) for video_feed, time_map in time_mappings.items()}
+    video_wise_fps = {video_feed: 1/video_min_delay for video_feed, video_min_delay in video_wise_min_delay.items()}
+    min_delay = min(list(video_wise_min_delay.values()))
+    fps = 1/min_delay
