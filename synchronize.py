@@ -34,7 +34,7 @@ def makeFolder(folder_name):
 
 if __name__ == "__main__":
     arguments = get_arguments(('-f', "--feed", "feed", "Name of Feed Folders with time mappings (seperated by ',')"),
-                              ('-w', "--write", "write", "Folder Name to store the Final Video Files"),
+                              ('-w', "--write", "write", "Folder Name to store the Final Video Files (default=current data and time)"),
                               ('-t', "--type", "type", f"Type of Video Set (Union/Intersection, Default={default_video_set_type})"))
     if not arguments.feed:
         display('-', f"Please provide Name of Feed Folders with time mappings")

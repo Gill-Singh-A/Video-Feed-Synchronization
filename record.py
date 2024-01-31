@@ -37,7 +37,7 @@ def makeFolder(folder_name):
 if __name__ == "__main__":
     arguments = get_arguments(('-c', "--camera", "camera", "Index of Camera Device to use"),
                               ('-s', "--show", "show", f"Show the Camera Feed (True/False, Default={show_camera_feed})"),
-                              ('-w', "--write", "write", "Folder Name to store the Frames and Time Mappings"))
+                              ('-w', "--write", "write", "Folder Name to store the Frames and Time Mappings (default=current data and time)"))
     if not arguments.camera:
         arguments.camera = default_camera
     else:
