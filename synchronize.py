@@ -122,4 +122,34 @@ if __name__ == "__main__":
         if T2 != T1:
             display(':', f"\tRate        = {Back.MAGENTA}{len(time_mappings)/(T2-T1)} Video Feeds / second{Back.RESET}")
     else:
-        pass
+        frames = (min_end_time - max_start_time) / min_delay
+        if frames < 0:
+            display('-', f"No Frames in Common")
+            exit(0)
+        display(':', f"Frames = {Back.MAGENTA}{frames}{Back.RESET}")
+        display(':', f"Time   = {Back.MAGENTA}{min_end_time-max_start_time} seconds{Back.RESET}")
+        T1 = time()
+        for video_feed, time_mapping in time_mappings.items():
+            t1 = time()
+            print()
+            display(':', f"Processing Video Feed {Back.MAGENTA}{video_feed}{Back.RESET}")
+            video_timing = max_start_time
+            while video_timing < min_end_time:
+                if video_timing < start_timings[video_feed] or video_timing > end_timings[video_feed]:
+                    frame = blank_frames[video_feed]
+                else:
+                    frame = cv2.imread(f"{video_feed}/frames/{time_mapping[min(list(time_mapping.keys()), key=lambda frame_time: abs(frame_time-video_timing))]}.jpg")
+                video_writers[video_feed].write(frame)
+                video_timing += min_delay
+            video_writers[video_feed].release()
+            t2 = time()
+            display('+', f"Processed Video Feed {Back.MAGENTA}{video_feed}{Back.RESET}")
+            if t2 != t1:
+                display(':', f"\tTime Taken = {Back.MAGENTA}{t2-t1} seconds{Back.RESET}")
+        T2 = time()
+        print()
+        display('+', f"Processed All Video Feeds")
+        display(':', f"\tTime Taken  = {Back.MAGENTA}{T2-T1} seconds{Back.RESET}")
+        display(':', f"\tVideo Feeds = {Back.MAGENTA}{len(time_mappings)}{Back.RESET}")
+        if T2 != T1:
+            display(':', f"\tRate        = {Back.MAGENTA}{len(time_mappings)/(T2-T1)} Video Feeds / second{Back.RESET}")
