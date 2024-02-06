@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-import cv2, pickle
+import cv2, pickle, numpy, pyautogui
 from pathlib import Path
 from datetime import date
 from optparse import OptionParser
@@ -35,7 +35,7 @@ def makeFolder(folder_name):
     frame_folder.mkdir(exist_ok=True, parents=True)
 
 if __name__ == "__main__":
-    arguments = get_arguments(('-c', "--camera", "camera", f"Index of Camera Device to use (Default Index={default_camera})"),
+    arguments = get_arguments(('-c', "--camera", "camera", f"Index of Camera Device to use (Default Index={default_camera}, use -1 for recording screen)"),
                               ('-s', "--show", "show", f"Show the Camera Feed (True/False, Default={show_camera_feed})"),
                               ('-w', "--write", "write", "Folder Name to store the Frames and Time Mappings (default=current data and time)"))
     if not arguments.camera:
@@ -52,13 +52,18 @@ if __name__ == "__main__":
     makeFolder(arguments.write)
     display('+', f"Made {Back.MAGENTA}{arguments.write}{Back.RESET} Folder")
     display(':', f"Starting Camera Index {Back.MAGENTA}{arguments.camera}{Back.RESET}")
-    video_capture = cv2.VideoCapture(arguments.camera)
+    if arguments.camera != -1:
+        video_capture = cv2.VideoCapture(arguments.camera)
     time_mapping = {}
     frame_index = 0
     try:
         while True:
             t1 = time()
-            ret, frame = video_capture.read()
+            if arguments.camera != -1:
+                ret, frame = video_capture.read()
+            else:
+                frame = cv2.cvtColor(numpy.array(pyautogui.screenshot()), cv2.COLOR_RGB2BGR)
+                ret = True
             t2 = time()
             if ret:
                 cv2.imwrite(f"{arguments.write}/frames/{frame_index}.jpg", frame)
@@ -66,7 +71,10 @@ if __name__ == "__main__":
                 frame_index += 1
                 display('+', f"Frames Recorded = {Back.MAGENTA}{frame_index}{Back.RESET}", start='\r', end='')
                 if arguments.show:
-                    cv2.imshow("Camera Feed", frame)
+                    if arguments.camera != -1:
+                        cv2.imshow("Camera Feed", frame)
+                    else:
+                        cv2.imshow("Screen", frame)
                     cv2.waitKey(1)
             else:
                 display('-', f"Error Reading Frame from Camera Index {Back.MAGENTA}{arguments.camera}{Back.RESET}", start='\r')
